@@ -90,7 +90,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#548235',
+    borderColor: '#4d8f64',
     borderRadius: 15,
     flexDirection: "row"
 
@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   container: {
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     padding: 5,
     height: '100%',
     // alignItems: "center"
@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
   },
   marginLeft: {
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     alignItems: 'center',
     justifyContent: 'center',
   },

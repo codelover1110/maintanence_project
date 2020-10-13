@@ -3,8 +3,12 @@ import { Button, View, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator, HeaderTitle, HeaderBackButton } from '@react-navigation/stack';
 import { browserHistory } from 'react-router'
+import Login from '../pages/Login';
+import PasswordReset from '../pages/PasswordReset';
+import ActivityLog from '../pages/ActivityLog';
 
-import Logroute from '../routes/LogRoute';
+
+
 import Nfctag from '../pages/Nfctag';
 import Home from '../pages/Home';
 import Metadata from '../pages/Metadata';
@@ -31,10 +35,29 @@ function App() {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="LogOut">
         <Stack.Screen
-          name="BACK"
-          component={Logroute}
+          name="Login"
+          component={Login}
           options={{
             headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="PasswordReset"
+          component={PasswordReset}
+          options={{
+            headerShown: false
+          }}
+        />
+        <Stack.Screen
+          name="ActivityLog"
+          component={ActivityLog}
+          options={{
+            headerTitle: '',
+            headerStyle: {
+              backgroundColor: '#4d8f64',
+              // shadowColor: 'transparent'
+            },
+            headerLeft: null
           }}
         />
         <Stack.Screen
@@ -58,7 +81,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
               // shadowColor: 'transparent'
             },
             headerLeft: null
@@ -70,7 +93,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
               // shadowColor: 'transparent'
             },
           }}
@@ -81,7 +104,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
               // shadowColor: 'transparent'
             },
           }}
@@ -92,7 +115,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
             },
             headerLeft: null
           }}
@@ -103,7 +126,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
             },
             headerLeft: null
           }}
@@ -114,7 +137,7 @@ function App() {
           options={{
             headerTitle: '',
             headerStyle: {
-              backgroundColor: '#548235',
+              backgroundColor: '#4d8f64',
             },
           }}
         />

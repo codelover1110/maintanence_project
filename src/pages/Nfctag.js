@@ -13,6 +13,11 @@ import {
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import AsyncStorage from "@react-native-community/async-storage";
 
+import {
+ heightPercentageToDP as hp,
+ widthPercentageToDP as wp,
+} from 'react-native-responsive-screen'
+
 export default function ShopScreen({ navigation }) {
   const [content, setContent] = useState('Please connect Nfc tag')
   const [connectNfc, setConnectNfc] = useState(true)
@@ -31,7 +36,8 @@ export default function ShopScreen({ navigation }) {
     return function cleanup() {
       this._cleanUp();
     }
-    // this._cleanSuccess('9')
+    // this._cleanSuccess(55);
+
   });
 
   _cleanUp = () => {
@@ -64,12 +70,13 @@ export default function ShopScreen({ navigation }) {
   }
 
   _cleanSuccess = (nfc_id) => {
-    let api_url = 'http://0bd44d9f4578.ngrok.io/editMetaData/' + nfc_id;
+    let api_url = 'http://249fc3ad6c59.ngrok.io/editNfctag/' + nfc_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
+        let tag_id = responseJson["tag_id"]
         navigation.navigate('Metadata', {
-          nfc_id: nfc_id
+          nfc_id: tag_id
         });
       })
       .catch((response) => alert("There isn't data TagID: " + nfc_id))
@@ -79,19 +86,15 @@ export default function ShopScreen({ navigation }) {
     <View style={styles.container}>
       <View style={styles.logoContainerLogoutButton}>
         <Text onPress={() => navigation.navigate('Home')} style={styles.backButton} >Back</Text>
-        <TouchableOpacity onPress={() => { AsyncStorage.removeItem('check_status'); _handlegoScan('BACK') }}>
-          <Image style={{ width: 40, height: 40, marginLeft: '75%' }}
-            source={require('../assets/images/logo.png')} />
-        </TouchableOpacity>
       </View>
       <View style={styles.logoContainer}>
-        <Image style={{ width: 170, height: 170 }}
+        <Image style={{ width: wp('30%'), height: wp('30%') }}
           source={require('../assets/images/logo.png')} />
       </View>
       <TouchableOpacity style={[connectNfc == false ? styles.hiddenVoteButtons : styles.nfctagButton]}
         onPress={() => this._connectNfctag()}
       >
-        <Text style={styles.buttonText}>Scan NFC Tag</Text>
+        <Text style={styles.buttonText}>Tap to Scan</Text>
       </TouchableOpacity>
      
     </View>
@@ -102,7 +105,7 @@ export default function ShopScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -112,30 +115,28 @@ const styles = StyleSheet.create({
     // flexGrow: 1,
     justifyContent: 'flex-end',
     alignItems: "center",
-    top: 100
+    top: '10%'
   },
 
   button: {
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     width: 300,
     borderRadius: 25,
     marginVertical: 20,
     paddingVertical: 10
   },
   nfctagButton: {
-    backgroundColor: '#548235',
-    width: 300,
-    borderRadius: 25,
-    marginVertical: 230,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: '#ffffff'
+    backgroundColor: '#ccc',
+    width: wp('60%'),
+    borderRadius: wp('1%'),
+    marginVertical: hp('30%'),
+    paddingVertical: hp('5%'),
   },
 
   buttonText: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '500',
-    color: '#ffffff',
+    color: '#7b8d93',
     textAlign: "center",
   },
   showVoteButtons: {
@@ -157,15 +158,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     // borderTopWidth: 1,
     borderColor: '#000000',
-    padding: 5
+    padding: 5,
   },
   backButton:  {
     padding: 10,
     marginBottom: 0,
-    borderColor: '#ccc',
-    borderWidth: 2,
-    color: '#ffffff',
-    borderRadius: 10,
+    backgroundColor: '#7b8d93',
+    color: '#fff',
+    borderRadius: 5,
     justifyContent: "center",
     marginLeft: '5%',
 

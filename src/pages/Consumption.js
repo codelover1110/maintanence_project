@@ -18,7 +18,11 @@ import {
 } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import AsyncStorage from "@react-native-community/async-storage";
-
+import SelectInput from 'react-native-select-input-ios';
+import {
+ heightPercentageToDP as hp,
+ widthPercentageToDP as wp,
+} from 'react-native-responsive-screen'
 
 export default function Consumption({ route, navigation }) {
 
@@ -29,6 +33,9 @@ export default function Consumption({ route, navigation }) {
   const [inputText, setInputText] = useState('')
   const [lastValue, setLastValue] = useState()
   const [nfcTAG, setNfcTAG] = useState()
+  const [selectOption, setSelectOption] = useState('')
+  const [remarks, setRemarks] = useState([])
+  const [currentID, setCurrentID] = useState('')
 
   useEffect(() => {
     const { nfc_id } = route.params;
@@ -36,24 +43,40 @@ export default function Consumption({ route, navigation }) {
     setNfcTAG(nfc_tag)
     setNfcID(nfc_id)
     getMetaData(nfc_id);
+    getRemarks();
+    AsyncStorage.getItem('customerID').then(value => {
+      setCurrentID(value)
+    });
   });
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://0bd44d9f4578.ngrok.io/editConsumptionmobile/' + tag_id;
+    let api_url = 'http://249fc3ad6c59.ngrok.io/editConsumptionmobile/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
         if (responseJson["success"] == "false") {
-          console.log("failure")
           setLastDate("There is no data")
         } else {
           consumption = (JSON.parse(responseJson))
-          latestDate = consumption[0]["fields"]["new_reading_date"].replace("T", " ").replace("Z", "")
+          latestDate = consumption[0]["fields"]["reading_date"].replace("T", " ").replace("Z", "")
           setLastDate(latestDate)
           setLastValue(consumption[0]["fields"]["new_value"])
-          console.log(consumption[0]["fields"], "------================")
         }
       })
+  }
+
+  getRemarks = () => {
+    let api_url = 'http://249fc3ad6c59.ngrok.io/getRemarks/';
+    return fetch(api_url)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        const selectOptions1 = []
+        responseJson.forEach(element => {
+          selectOptions1.push({ value: element.value, label: element.value })
+        });
+        setRemarks(selectOptions1)
+      })
+
   }
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -81,7 +104,11 @@ export default function Consumption({ route, navigation }) {
   // }
 
   _handleConsumptionData = () => {
-    if (inputText != '' && ((inputText.split(",")).length < 3 )) {
+    if (selectOption == '') {
+      alert("Note is required ")
+    }
+
+    if (inputText != '' && ((inputText.split(",")).length < 3  && (inputText.split(",")[0] != '') )) {
       let alertData = "Consumption Data"
       Alert.alert(
         'Are you sure to save?',
@@ -97,7 +124,7 @@ export default function Consumption({ route, navigation }) {
         { cancelable: false },
       );
     } else {
-      alert("Invalided Value. Try again!")
+      alert("Invalid Value. Try again!")
     }
 
   }
@@ -105,11 +132,11 @@ export default function Consumption({ route, navigation }) {
   _upDateConsumptionData = () => {
     let formData = new FormData();
     formData.append("tagID", nfcID)
-    formData.append("lastDate", lastDate)
     formData.append("new_value", inputText)
+    formData.append("remark", selectOption)
+    formData.append("read_by", currentID)
 
-
-    fetch('http://0bd44d9f4578.ngrok.io/manageConsumptionData/', {
+    fetch('http://249fc3ad6c59.ngrok.io/manageConsumptionData/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -126,6 +153,16 @@ export default function Consumption({ route, navigation }) {
       }).catch(err => {
         console.log(err)
       })
+  }
+
+  _changConsumpData = (inputText) => {
+    console.log(inputText.includes(','))
+    console.log((inputText.split(","))[1])
+    if (inputText.split(",")[1] == '') {
+      setInputText(inputText + '0');
+    } else {
+      setInputText(inputText);
+    }
   }
 
   _handleNewDate = () => {
@@ -149,6 +186,7 @@ export default function Consumption({ route, navigation }) {
     <KeyboardAvoidingView
       behavior={Platform.OS == "ios" ? "padding" : null}
       style={{ flex: 1 }}
+      keyboardVerticalOffset="100"
     >
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
@@ -156,7 +194,7 @@ export default function Consumption({ route, navigation }) {
             <Text style={styles.headerText}> TagID:  </Text>
             <Text style={styles.headerTextXY}>{nfcID}</Text>
           </View>
-          <Image style={{ width: 40, height: 40, marginLeft: '10%', marginBottom: 20 }}
+          <Image style={{ width: wp('7%'), height: wp('7%'), marginLeft: wp('5%'), marginBottom: wp('7%') }}
             source={require('../assets/images/metabrand.png')} />
         </View>
 
@@ -183,12 +221,27 @@ export default function Consumption({ route, navigation }) {
             </View>
             <View style={styles.itemContent}>
               <TextInput
-                onChangeText={(text) => { setInputText(text); console.log('state ', inputText) }}
+                onChangeText={(text) => { _changConsumpData(text) }}
                 defaultValue={newDate}
                 editable={true}
                 multiline={false}
                 maxLength={200}
                 keyboardType={"numeric"}
+              />
+            </View>
+          </View>
+          <View style={styles.item} >
+            <View style={styles.marginLeft}>
+              <View style={styles.itemTitle}>
+                <Text style={styles.itemTitleText}>Note</Text>
+              </View>
+            </View>
+            <View style={styles.itemContent}>
+              <SelectInput
+                value={selectOption}
+                options={remarks}
+                onSubmitEditing={(value) => setSelectOption(value)}
+                style={styles.selectInput}
               />
             </View>
           </View>
@@ -208,12 +261,12 @@ export default function Consumption({ route, navigation }) {
 
 const styles = StyleSheet.create({
   header: {
-    height: 100,
+    height: hp('10%'),
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#548235',
+    borderColor: '#4d8f64',
     borderRadius: 15,
     flexDirection: "row"
 
@@ -226,16 +279,16 @@ const styles = StyleSheet.create({
 
   },
   headerText: {
-    fontSize: 40,
+    fontSize: wp('10%'),
     fontWeight: 'bold',
     color: '#000000',
   },
   headerTextXY: {
-    fontSize: 38,
+    fontSize: wp('9%'),
     color: '#000000',
   },
   container: {
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     padding: 5,
     height: '100%'
   },
@@ -245,18 +298,11 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
   },
   marginLeft: {
     marginLeft: 5,
-  },
-  menu: {
-    width: 20,
-    height: 2,
-    backgroundColor: '#111',
-    margin: 2,
-    borderRadius: 3,
   },
   text: {
     fontSize: 15,
@@ -269,7 +315,7 @@ const styles = StyleSheet.create({
   },
   itemContent: {
     width: '55%',
-    height: 50,
+    height: hp('7%'),
     backgroundColor: '#c4d3db',
     justifyContent: "center",
     paddingLeft: 10,
@@ -292,9 +338,10 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     alignItems: 'center',
     justifyContent: 'center',
+    // marginTop: '10%'
   },
   touchableHighlight: {
     backgroundColor: 'white',
@@ -322,8 +369,8 @@ const styles = StyleSheet.create({
   itemTitle: {
     borderWidth: 2,
     padding: 10,
-    width: 120,
-    height: 80,
+    width: wp('25%'),
+    height: hp('10%'),
     borderColor: '#ffffff',
     borderRadius: 10,
     backgroundColor: '#5b9bd5',
@@ -346,7 +393,13 @@ const styles = StyleSheet.create({
     borderColor: '#ffffff',
     borderRadius: 15,
     backgroundColor: '#ffffff',
-    marginTop: 20
+    marginTop: 5
+  },
+  selectInput: {
+    flexDirection: 'row',
+    height: 40,
+    padding: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
 })
 

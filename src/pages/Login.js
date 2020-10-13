@@ -14,18 +14,16 @@ import {
 
 
 import Icon from 'react-native-vector-icons/MaterialIcons'
-
 import Logo from '../components/Logo';
-
 import CheckBox from 'react-native-check-box';
 import AsyncStorage from "@react-native-community/async-storage";
 
 function Login(props) {
-  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
 
-  const [isSelected, setSelection] = useState(false);
+  const [isSelected, setSelection] = useState(true);
   const [isLogined, setLogined] = useState(false);
 
 
@@ -41,31 +39,33 @@ function Login(props) {
 
   _handlePress = () => {
 
-    if (userEmail && userPassword) {
+    if (userName && userPassword) {
       setShowLoading(true);
 
-      let api_url = 'http://0bd44d9f4578.ngrok.io/getuser/' + userEmail + '/' + userPassword;
+      let api_url = 'http://249fc3ad6c59.ngrok.io/getUserMobile/' + userName + '/' + userPassword;
       return fetch(api_url)
         .then((response) => response.json())
         .then((responseJson) => {
-          if (responseJson.email != "") {
+          if (responseJson.user_name != "") {
             if (responseJson.password != "") {
-
-              AsyncStorage.setItem('customerID', userEmail);
-              if (isSelected) {
-                AsyncStorage.setItem('check_status', 'true')
-
+              console.log(responseJson.Authority)
+              if (responseJson.Authority != "false") {
+                AsyncStorage.setItem('customerID', userName);
+                if (isSelected) {
+                  AsyncStorage.setItem('check_status', 'true')
+                }
+                props.navigation.navigate('Home')
+              } else {
+                alert("Your account is inactive. Please contact administrator")
               }
-              props.navigation.navigate('Home')
               setShowLoading(false)
-
             } else {
               setShowLoading(false)
               alert("Your password doesn't correct! Input again.")
             }
           } else {
             setShowLoading(false)
-            alert("Your email doesn't correct!")
+            alert("Your username doesn't correct!")
           }
         })
         .catch((error) => {
@@ -81,32 +81,23 @@ function Login(props) {
       behavior={Platform.OS == "ios" ? "padding" : height} style={styles.container}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View>
-          <Logo />
           <View style={styles.signupContainer}>
             <View style={styles.itemcontainer}>
-              <Icon
-                style={styles.imgIcon} name="email" size={20} color='#000'
-              />
               <TextInput style={styles.inputBox}
-                placeholder="Email"
-                placeholderTextColor="#ffffff"
+                placeholder="Username"
+                placeholderTextColor="#ccc"
                 selectionColor='#fff'
-                keyboardType="email-address"
                 returnKeyLabel={"next"}
-                onChangeText={(text) => setUserEmail(text)}
+                onChangeText={(text) => setUserName(text)}
                 autoCapitalize="none"
               />
             </View>
             <View style={styles.itemcontainer}>
-              <Icon
-                style={styles.imgIcon} name="keyboard" size={20} color='#000'
-              />
               <TextInput style={styles.inputBox}
                 underlineColorAndroid='rgba(0,0,0,0)'
                 placeholder="Password"
                 secureTextEntry={true}
-                placeholderTextColor="#ffffff"
-                // ref={(input) => this.password = input}
+                placeholderTextColor="#ccc"
                 returnKeyLabel={"next"}
                 onChangeText={(text) => setUserPassword(text)}
               />
@@ -118,15 +109,22 @@ function Login(props) {
                 }}
                 isChecked={isSelected}
               />
-              <Text> Forbliv logged ind</Text>
+              <Text>Stay signed in?</Text>
             </View>
-
-            {showLoading == true ? <ActivityIndicator size="large" color="#00ff00" />
-              : <TouchableOpacity style={styles.button}
-                onPress={this._handlePress}>
-                <Text style={styles.buttonText}>SignIn</Text>
-              </TouchableOpacity>
-            }
+            <View style={styles.itemcontainer}>
+              {showLoading == true ? <ActivityIndicator size="large" color="#00ff00" />
+                : <TouchableOpacity style={styles.button}
+                  onPress={this._handlePress}>
+                  <Text style={styles.buttonText}>SignIn</Text>
+                </TouchableOpacity>
+              }
+            </View>
+            <View style={styles.itemcontainer}>
+                <TouchableOpacity style={styles.button}
+                  onPress={() => props.navigation.navigate('PasswordReset')}>
+                  <Text style={styles.buttonText}>Reset password</Text>
+                </TouchableOpacity>
+            </View>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -137,7 +135,7 @@ function Login(props) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center'
@@ -151,21 +149,20 @@ const styles = StyleSheet.create({
   inputBox: {
     width: 300,
     height: 50,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 15,
+    backgroundColor: '#ffffff',
+    borderRadius: 10,
     paddingHorizontal: 16,
     fontSize: 16,
-    color: '#ffffff',
+    color: '#000000',
     marginVertical: 16
   },
 
   button: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    width: 300,
-    borderRadius: 15,
+    backgroundColor: '#7b8d93',
+    width: 200,
+    borderRadius: 10,
     marginVertical: 10,
     paddingVertical: 13,
-    marginLeft: 30
   },
 
   buttonText: {

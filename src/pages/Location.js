@@ -1,9 +1,14 @@
 import React, { useState, useLayoutEffect, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Keyboard } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Keyboard, Dimensions, Alert } from "react-native";
 
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
+import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from "@react-native-community/async-storage";
+import { useFocusEffect } from '@react-navigation/native';
+import { TouchableHighlight } from "react-native-gesture-handler";
 
-const App = ({ navigation }) => {
+
+const App = ({ navigation, route }) => {
 
   const [metaDatas, setMetaDatas] = useState([])
   const [tagID, setTagID] = useState('')
@@ -11,30 +16,37 @@ const App = ({ navigation }) => {
   const [searchContent, setSearchContent] = useState('')
   const [tempMetaData, setTempMetaData] = useState()
   const [btnColor, setBtnColor] = useState('white')
-  const [mapTypes, setMapTypes] = useState('')
+  const [mapTypes, setMapTypes] = useState('standard')
   const [nfcTAG, setNfcTAG] = useState('')
   const [energyArt, setEnergyArt] = useState('')
-
+  const [flag, setFlag] = useState(true)
 
   const colorButton = {
-    Vand: require('../assets/images/metaIcon/blue.png'),
-    El: require('../assets/images/metaIcon/green.png'),
+    Water: require('../assets/images/metaIcon/blue.png'),
+    Electricity: require('../assets/images/metaIcon/green.png'),
     CO2: require('../assets/images/metaIcon/darkgrey.png'),
     NH3: require('../assets/images/metaIcon/black.png'),
-    Trykluft: require('../assets/images/metaIcon/orange.png'),
-    Varme: require('../assets/images/metaIcon/red.png'),
+    "Compressed Air": require('../assets/images/metaIcon/orange.png'),
+    Heat: require('../assets/images/metaIcon/red.png'),
     Glycol: require('../assets/images/metaIcon/white.png'),
-    Spildevand: require('../assets/images/metaIcon/brown.png'),
+    "Waste Water": require('../assets/images/metaIcon/brown.png'),
     pH: require('../assets/images/metaIcon/purple.png'),
-    Syre: require('../assets/images/metaIcon/yellow.png'),
+    Acid: require('../assets/images/metaIcon/yellow.png'),
   };
 
-  useEffect(() => {
-    getMetaDatas()
-  }, []);
+ 
+
+  useFocusEffect(() => {
+    if(flag) {
+     getMetaDatas()
+     setFlag(false)
+    }
+     setTagType('')
+  });
+
 
   getMetaDatas = () => {
-    let api_url = 'http://0bd44d9f4578.ngrok.io/getMetaDatas/';
+    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaMainDatas/';
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -43,66 +55,72 @@ const App = ({ navigation }) => {
       })
   }
 
+
+
   _handleSearch = () => {
     if (searchContent == '') {
       return
     }
     setMetaDatas(tempMetaData)
-    let searchData = (metaDatas => metaDatas.filter(x => (x.tag_id).toLowerCase() == searchContent.toLowerCase() || (x.column_line).toLowerCase() == searchContent.toLowerCase()
-      || (x.energy_art).toLowerCase() == searchContent.toLowerCase() || (x.latitude).toLowerCase() == searchContent.toLowerCase() || (x.longtitude).toLowerCase() == searchContent.toLowerCase()
-      || (x.media_type).toLowerCase() == searchContent.toLowerCase() || (x.meta_data_picture).toLowerCase() == searchContent.toLowerCase() || (x.meter_level_structure).toLowerCase() == searchContent.toLowerCase()
-      || (x.meter_location).toLowerCase() == searchContent.toLowerCase() || (x.meter_point_description).toLowerCase() == searchContent.toLowerCase() || (x.nfc_tag).toLowerCase() == searchContent.toLowerCase()
-      || (x.supply_area_child).toLowerCase() == searchContent.toLowerCase() || (x.supply_area_parent).toLowerCase() == searchContent.toLowerCase()))
-    // console.log(metaDatas)
+    let searchData = (metaDatas => metaDatas.filter(x => (x.technical_category) && (x.technical_category).toLowerCase() == searchContent.toLowerCase() || (x.equipment_name) && (x.equipment_name).toLowerCase() == searchContent.toLowerCase()
+      || (x.nfc_tag) && (x.nfc_tag).toLowerCase() == searchContent.toLowerCase() || (x.service_interval) && (x.service_interval).toLowerCase() == searchContent.toLowerCase() || (x.legit) && (x.legit).toLowerCase() == searchContent.toLowerCase()
+      || (x.latest_service) && (x.latest_service).toLowerCase() == searchContent.toLowerCase() || (x.longitude) && (x.longitude).toLowerCase() == searchContent.toLowerCase() || (x.latitude) && (x.latitude).toLowerCase() == searchContent.toLowerCase()
+      || (x.expected_service) && (x.expected_service).toLowerCase() == searchContent.toLowerCase() || (x.reminder_month) && (x.reminder_month).toLowerCase() == searchContent.toLowerCase() || (x.nfc_tag) && (x.nfc_tag).toLowerCase() == searchContent.toLowerCase()
+      || (x.reminder_week) && (x.reminder_week).toLowerCase() == searchContent.toLowerCase() || (x.reminder_flag) && (x.reminder_flag).toLowerCase() == searchContent.toLowerCase()))
     setMetaDatas(searchData)
-    // setRegion({
-    //   latitude: parseFloat(metaDatas[0]["latitude"]),
-    //   longitude: parseFloat(metaDatas[0]["longtitude"]),
-    //   latitudeDelta: 0.0922,
-    //   longitudeDelta: 0.0421,
-    // })
-    setRegion({
-      latitude: 55.1183760,
-      longitude: 9.729960,
-      latitudeDelta: 0.0922,
-      longitudeDelta: 0.0421,
-    })
+    if ((metaDatas).length > 0) {
+      setRegion({
+        latitude: parseFloat(metaDatas[0]["latitude"]),
+        longitude: parseFloat(metaDatas[0]["longitude"]),
+        latitudeDelta: 0.0922,
+        longitudeDelta: 0.0421,
+      })
+    }
   }
 
+  const { height, width } = Dimensions.get('window');
+  const LATITUDE_DELTA = 0.009
+  const LONGITUDE_DELTA = LATITUDE_DELTA * (width / height)
+
   const [region, setRegion] = useState({
-    latitude: 55.583760,
-    longitude: 9.729960,
-    latitudeDelta: 0.0922,
-    longitudeDelta: 0.0421,
+    latitude: 55.586940,
+    longitude: 9.726038,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
   });
 
   _handleMarker = (metaData) => {
-    console.log(metaData["tag_id"], "000000000")
-    setTagID(metaData["tag_id"])
+    setTagID(metaData["equipment_name"])
     setTagType(metaData["media_type"])
-    setNfcTAG(metaData["nfc_tag"])
-    setEnergyArt(metaData["energy_art"])
+    setNfcTAG(metaData["id"])
+    setEnergyArt(metaData["technical_category"])
 
   }
 
-  _handleSearchContent = (text) => {
-    setSearchContent(text)
-    if (text == '') {
+  _handleSearchContent = (searchContent) => {
+    setSearchContent(searchContent)
+    setMetaDatas(tempMetaData)
+
+    if (searchContent == '') {
       setMetaDatas(tempMetaData)
+      return
     }
+    _handleRealtimeSearch(searchContent)
+  }
+
+  _handleRealtimeSearch = (searchContent) => {
+    let tmd = tempMetaData
+    let filteredValue = tmd.filter(x => (x.technical_category) && (x.technical_category).includes(searchContent) || (x.equipment_name) && ((x.equipment_name).toLowerCase()).includes(searchContent.toLowerCase())
+      || (x.nfc_tag) && ((x.nfc_tag).toLowerCase()).includes(searchContent.toLowerCase()) || (x.service_interval) && ((x.service_interval).toLowerCase()).includes(searchContent.toLowerCase()) || (x.legit) && ((x.legit).toLowerCase()).includes(searchContent.toLowerCase())
+      || (x.latest_service) && ((x.latest_service).toLowerCase()).includes(searchContent.toLowerCase()) || (x.longitude) && ((x.longitude).toLowerCase()).includes(searchContent.toLowerCase()) || (x.latitude) && ((x.latitude).toLowerCase()).includes(searchContent.toLowerCase())
+      || (x.expected_service) && ((x.expected_service).toLowerCase()).includes(searchContent.toLowerCase()) || (x.reminder_month) && ((x.reminder_month).toLowerCase()).includes(searchContent.toLowerCase()) || (x.nfc_tag) && ((x.nfc_tag).toLowerCase()).includes(searchContent.toLowerCase())
+      || (x.reminder_week) && ((x.reminder_week).toLowerCase()).includes(searchContent.toLowerCase()) || (x.reminder_flag) && ((x.reminder_flag).toLowerCase()).includes(searchContent.toLowerCase()))
+    setMetaDatas(filteredValue)
   }
 
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerRight: () => (
-        <View>
-          <TouchableOpacity onPress={() => navigation.navigate('Home')}>
-            <Image style={styles.logoutButton}
-              source={require('../assets/images/logo.png')} />
-          </TouchableOpacity>
-        </View>
-      ),
       headerLeft: () => (
         <View>
           <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -114,29 +132,37 @@ const App = ({ navigation }) => {
     });
   }, [navigation]);
 
-  _goConsumption = () => {
-    if (tagID == '') {
-      alert("Select Tag!")
-      return
-    }
-    // navigation.navigate('Consumptionlocation', { nfc_id: nfcTAG })
-    navigation.navigate('Consumption', { nfc_id: tagID })
-  }
-  _goMeataData = () => {
-    if (tagID == '') {
+  _goMetaData = () => {
+    if (nfcTAG == '') {
       alert("Select Tag!")
       return
     }
     navigation.navigate('Metadata', { nfc_id: nfcTAG })
   }
+  _getLocation = () => {
+    let alertData = "Get Current Location"
+    Alert.alert(
+      'Are you sure?',
+      alertData,
+      [
+        {
+          text: 'Cancel',
+          onPress: () => console.log('OK Pressed'),
+          style: 'cancel',
+        },
+        { text: 'OK', onPress: () => _upDateLocation() },
+      ],
+      { cancelable: false },
+    );
+  }
   _goTags = () => {
     navigation.navigate('Tags')
   }
   _handleMapType = () => {
-    if (mapTypes == '') {
+    if (mapTypes == 'standard') {
       setMapTypes('satellite')
     } else {
-      setMapTypes('')
+      setMapTypes('standard')
     }
   }
 
@@ -145,7 +171,6 @@ const App = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <View style={styles.item} >
-
         <View style={styles.searchContent}>
           <TextInput
             onChangeText={(text) => { _handleSearchContent(text) }}
@@ -169,36 +194,42 @@ const App = ({ navigation }) => {
         style={styles.map}
         initialRegion={region}
         customMapStyle={mapStyle}
-        mapType={mapTypes}
-      // onRegionChange={() => onRegionChange()}
+        mapType={'satellite'}
+        showsUserLocation={true}
+        onRegionChange={region => setRegion({ region })}
+        onRegionChangeComplete={region => setRegion({ region })}
+        zoomEnabled={true}
       >
-        {/* <CustomMarker /> */}
-        {metaDatas.length > 0 ? metaDatas.map((metaData) =>
-          <Marker
+        {metaDatas.length > 0 && metaDatas.map((metaData) => {
+          if (metaData["latitude"] && metaData["longitude"]) {
+            return <Marker
             draggable
             coordinate={{
               latitude: parseFloat(metaData["latitude"]),
-              longitude: parseFloat(metaData["longtitude"]),
+              longitude: parseFloat(metaData["longitude"]),
             }}
             onDragEnd={(e) => _handleMarker(e, metaData)}
-            title={'TagID: ' + metaData["tag_id"]}
-            // description={'Location: ' + metaData["meter_location"]}
-            image={colorButton[(metaData["energy_art"])]}
-            onTouchStart={() => _handleMarker(metaData)}
+            image={colorButton[(metaData["technical_category"])]}
+            onPress={() => _handleMarker(metaData)}
+            onCalloutPress={() => _handleMarker(metaData)}
             key={metaData["id"]}
-          />) : <Marker
-            draggable
-            coordinate={{
-              latitude: 0,
-              longitude: 0,
-            }}
-            image={require('../assets/images/degreeday.png')}
-          />}
+          >
+            <MapView.Callout>
+              <TouchableHighlight onPress={() => _handleMarker(metaData)}>
+                <View>
+                  <Text>Equipment: {metaData["equipment_name"]}</Text>
+                  <Text>Technical Category: {metaData["technical_category"]}</Text>
+                </View>
+              </TouchableHighlight>
+            </MapView.Callout>
+          </Marker>}
+          })
+        }
       </MapView>
-      <View style={styles.itemTag} >
+       <View style={styles.itemTag} >
         <View style={styles.marginLeft}>
           <View style={styles.itemTagTitle}>
-            <Text style={styles.itemTitleText}>TagID       :</Text>
+            <Text style={styles.itemTitleText}>Equipment Name:</Text>
           </View>
         </View>
 
@@ -210,19 +241,11 @@ const App = ({ navigation }) => {
             value={tagID}
           />
         </View>
-        {/* <View>
-          <View style={styles.itemTitle}>
-            <TouchableOpacity onPress={() => _handleLogout()}>
-              <Image style={styles.searchButton}
-                source={require('../assets/images/search.png')} />
-            </TouchableOpacity>
-          </View>
-        </View> */}
       </View>
       <View style={styles.itemTagType} >
         <View style={styles.marginLeft}>
           <View style={styles.itemTagTitle}>
-            <Text style={styles.itemTitleText}>EnergyArt:</Text>
+            <Text style={styles.itemTitleText}>Technical Category:</Text>
           </View>
         </View>
 
@@ -236,35 +259,31 @@ const App = ({ navigation }) => {
         </View>
       </View>
       <View style={styles.buttonGroup} >
-        <View style={styles.buttonGroupContainer}>
-          <View style={styles.itemTitle}>
-            <TouchableOpacity onPress={() => _goMeataData()}>
-              <Image style={styles.buttonService}
-                source={require('../assets/images/service.png')} />
-            </TouchableOpacity>
+        <TouchableOpacity onPress={() => _getLocation()}>
+          <View style={styles.buttonGroupContainer}>
+            <View style={styles.itemTitle}>
+                <Text style={styles.textStyle}>Get Location</Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.buttonGroupContainer}>
-          <View style={styles.itemTitle}>
-            <TouchableOpacity onPress={() => _goTags()}>
-              <Image style={styles.buttonSerial}
-                source={require('../assets/images/list.png')} />
-            </TouchableOpacity>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={() => _goMetaData()}>
+          <View style={styles.buttonGroupContainer}>
+            <View style={styles.itemTitle}>
+                <Text style={styles.textStyle}>Meta Data</Text>
+            </View>
           </View>
-        </View>
+        </TouchableOpacity>
         <View style={styles.buttonGroupContainer}>
           <View style={styles.itemTitle}>
             <TouchableOpacity onPress={() => _goConsumption()}>
-              <Image style={styles.buttonSerial}
-                source={require('../assets/images/consumption.png')} />
+              <Text style={styles.textStyle}>Activity Log</Text>
             </TouchableOpacity>
           </View>
         </View>
         <View style={styles.buttonGroupContainer}>
           <View style={styles.itemTitle}>
             <TouchableOpacity onPress={() => _handleMapType()}>
-              <Image style={styles.buttonSerial}
-                source={require('../assets/images/location.png')} />
+              <Text style={styles.textStyle}>Equipment List</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -284,7 +303,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'flex-end',
-    backgroundColor: '#548235'
+    backgroundColor: '#4d8f64'
   },
   map: {
     position: 'absolute',
@@ -304,18 +323,19 @@ const styles = StyleSheet.create({
   backButton: {
     marginLeft: 20,
     padding: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
     marginBottom: 0,
-    borderColor: '#ccc',
-    borderWidth: 2,
+    backgroundColor: '#7b8d93',
     color: '#ffffff',
-    borderRadius: 10,
+    borderRadius: 5,
     justifyContent: "center",
   },
   item: {
     position: 'absolute',
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
     justifyContent: "center",
     top: 10,
@@ -325,30 +345,30 @@ const styles = StyleSheet.create({
     position: 'absolute',
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
-    bottom: '33%',
+    bottom: '30%',
     justifyContent: "center",
-    width: '105%',
+    width: '70%',
     borderRadius: 20
   },
   itemTagType: {
     position: 'absolute',
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
-    bottom: '27%',
+    bottom: '23%',
     justifyContent: "center",
-    width: '105%'
+    width: '70%'
   },
   buttonGroup: {
     position: 'absolute',
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
-    bottom: '12%',
+    bottom: '5%',
     justifyContent: "center",
     width: '60%'
   },
@@ -394,27 +414,41 @@ const styles = StyleSheet.create({
   },
   itemTagTitle: {
     borderWidth: 1,
-    width: 80,
+    width: 165,
     height: 35,
     alignItems: "center",
     justifyContent: "center",
     borderColor: '#ffffff',
     backgroundColor: '#ffffff',
-    paddingLeft: 10,
+    paddingLeft: 35,
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10
   },
   buttonGroupContainer: {
     marginLeft: 5,
-    borderWidth: 2,
-    borderColor: '#ffffff',
-    borderRadius: 15,
+    borderRadius: 10,
     width: 80,
     height: 80,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#7b8d93',
     alignItems: "center",
     justifyContent: "center"
-  }
+  },
+  buttonGroupContainerActive: {
+    marginLeft: 5,
+    borderRadius: 10,
+    width: 80,
+    height: 80,
+    backgroundColor: 'orange',
+    alignItems: "center",
+    justifyContent: "center"
+  },
+  textStyle: {
+    fontSize: 15,
+    fontWeight: "bold",
+    letterSpacing: 0.1,
+    color: '#fff',
+    textAlign: 'center'
+  },
 
 });
 

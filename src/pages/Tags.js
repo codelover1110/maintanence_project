@@ -37,7 +37,7 @@ export default function Tags({ route, navigation }) {
   });
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://0bd44d9f4578.ngrok.io/getMetaDatas/';
+    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaDatas/';
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -72,7 +72,7 @@ export default function Tags({ route, navigation }) {
 
 
   renderItem = ({ item }) => (
-    <TouchableHighlight onPress={() => { navigation.navigate('Metadata', { nfc_id: item.nfc_tag }); }}
+    <TouchableHighlight onPress={() => { navigation.navigate('Metadata', { nfc_id: item.tag_id }); }}
       underlayColor={'#f1f1f1'} key={item.id} >
       <View style={styles.item} >
         <View style={styles.marginLeft}>
@@ -99,7 +99,7 @@ export default function Tags({ route, navigation }) {
       <View style={styles.contentContainer}>
         <FlatList
           data={metaDatas}
-          keyExtractor={(item) => item.item}
+          keyExtractor={(item) => item.tag_id}
           renderItem={renderItem}
         />
       </View>
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#548235',
+    borderColor: '#4d8f64',
     borderRadius: 15,
     flexDirection: "row"
 
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     color: '#000000',
   },
   container: {
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     padding: 5,
     height: '100%'
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   item: {
     flexDirection: 'row',
     borderBottomWidth: 5,
-    borderBottomColor: '#548235',
+    borderBottomColor: '#4d8f64',
     alignItems: 'center',
   },
   marginLeft: {
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
   },
   modalView: {
     flex: 1,
-    backgroundColor: '#548235',
+    backgroundColor: '#4d8f64',
     alignItems: 'center',
     justifyContent: 'center',
   },

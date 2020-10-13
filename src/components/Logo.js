@@ -5,6 +5,10 @@ import {
   View,
   Image
 } from 'react-native';
+import {
+ heightPercentageToDP as hp,
+ widthPercentageToDP as wp,
+} from 'react-native-responsive-screen'
 
 function Logo() {
   return (
@@ -33,8 +37,8 @@ const styles = StyleSheet.create({
 
   },
   logoImage: {
-    width: 200,
-    height: 200
+    width: wp('40%'),
+    height: wp('40%')
   },
   textContainer: {
     // width: 300,
