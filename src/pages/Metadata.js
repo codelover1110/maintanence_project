@@ -44,6 +44,9 @@ export default function Metadata({ route, navigation }) {
   const [newService, setNewService] = useState('')
   const [userName, setUserName] = useState('')
   const { nfc_id } = route.params;
+  const [userAutherity, setUserAutherity] = useState();
+  const [selectedLatitude, setSelectedLatitude] = useState();
+  const [selectedLongitude, setSelectedLongitude] = useState();
 
   useEffect(() => {
     setNfcTagID(nfc_id)
@@ -52,21 +55,11 @@ export default function Metadata({ route, navigation }) {
     AsyncStorage.getItem('customerID').then(value => {
       setUserName(value)
     });
+    AsyncStorage.getItem('userAutherity').then(value => {
+      setUserAutherity(value)
+    });
 
   }, [nfc_id]);
-
-   const options = [
-    { value: "Electricity", label: "Electricity" },
-    { value: "Water", label: "Water" },
-    { value: "CO2", label: "CO2" },
-    { value: "NH3", label: "NH3" },
-    { value: "Compressed Air", label: "Compressed Air" },
-    { value: "Heat", label: "Heat" },
-    { value: "Glycol", label: "Glycol" },
-    { value: "Waste Water", label: "Waste Water" },
-    { value: "pH", label: "pH" },
-    { value: "Acid", label: "Acid" }
-  ]
 
   getMetaData = (tag_id) => {
     let api_url = 'http://249fc3ad6c59.ngrok.io/editMetaMainData/' + tag_id;
@@ -76,6 +69,8 @@ export default function Metadata({ route, navigation }) {
         setRowID(responseJson.id)
         setEquipmentName(responseJson.equipment_name)
         getLatestService(responseJson.equipment_name)
+        setSelectedLatitude(responseJson.latitude)
+        setSelectedLongitude(responseJson.longitude)
         let metaData = [
           { item: 'equipment_name', text: 'Equipment Name:', value: responseJson.equipment_name },
           { item: 'expected_service', text: 'Expected Service:', value: ((responseJson.expected_service).replace('T', ' ')).replace('Z', '') },
@@ -168,7 +163,11 @@ export default function Metadata({ route, navigation }) {
       .then((response) => response.json())
       .then((responseJson) => {
         let convertJson = JSON.parse(responseJson)
-        setLatestService(convertJson[(convertJson.length) - 1]["fields"]["date"])
+        if (convertJson.length > 0) {
+          setLatestService(convertJson[(convertJson.length) - 1]["fields"]["date"])
+        } else {
+          setLatestService(newService)
+        }
       })
   }
 
@@ -188,59 +187,7 @@ export default function Metadata({ route, navigation }) {
     return currentDate;
   }
 
-  getChangsLocation = () => {
 
-    Geolocation.watchPosition(
-      //Will give you the current location
-      (position) => {
-        let longitude = JSON.stringify(position.coords.longitude);
-        let latitude = JSON.stringify(position.coords.latitude);
-        setCurrentLatitude(latitude)
-        setCurrentLongitude(longitude)
-      },
-      (error) => alert(error.message),
-      {
-       enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
-      }
-    )
-  }
-
-  getCurrentLocation = () => {
-
-    Geolocation.getCurrentPosition(
-      //Will give you the current location
-      (position) => {
-        let longitude = JSON.stringify(position.coords.longitude);
-        let latitude = JSON.stringify(position.coords.latitude);
-        setCurrentLatitude(latitude)
-        setCurrentLongitude(longitude)
-        AsyncStorage.setItem('currentLongitude', longitude);
-        AsyncStorage.setItem('currentLatitude', latitude);
-
-      },
-      (error) => alert(error.message),
-      {
-       enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
-      }
-    )
-  }
-
-  _getLocation = () => {
-    let alertData = "Get Current Location"
-    Alert.alert(
-      'Are you sure?',
-      alertData,
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('OK Pressed'),
-          style: 'cancel',
-        },
-        { text: 'OK', onPress: () => _upDateLocation() },
-      ],
-      { cancelable: false },
-    );
-  }
 
   _saveActivity = () => {
     let formData = new FormData();
@@ -262,13 +209,14 @@ export default function Metadata({ route, navigation }) {
         'Content-Type': 'multipart/form-data',
       },
       body: formData
-    })
+    })                    
       .then((response) => response.json())
       .then(response => {
         if (response.success == "true") {
           setModalVisible(false)
           setComment('');
           setDueTime('');
+          getMetaData(nfc_id)
         } else {
           alert("save error")
         }
@@ -277,50 +225,73 @@ export default function Metadata({ route, navigation }) {
       })
   }
 
+  getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      //Will give you the current location
+      (position) => {
+        let longitude = JSON.stringify(position.coords.longitude);
+        let latitude = JSON.stringify(position.coords.latitude);
+        setCurrentLatitude(latitude)
+        setCurrentLongitude(longitude)
+        AsyncStorage.setItem('currentLongitude', longitude);
+        AsyncStorage.setItem('currentLatitude', latitude);
+
+      },
+      (error) => alert(error.message),
+      {
+        enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
+      }
+    )
+  }
+
+
+  _getLocation = () => {
+    if (userAutherity == 'Admin') {
+    let alertData = "Get Current Location"
+      Alert.alert(
+        'Are you sure?',
+        alertData,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('OK Pressed'),
+            style: 'cancel',
+          },
+          { text: 'OK', onPress: () => _upDateLocation() },
+        ],
+        { cancelable: false },
+      );
+    } else {
+      alert("Only Available if user had User Authority  'Admin'")
+    }
+  }
+
   _upDateLocation = () => {
     let formData = new FormData();
-    formData.append("id", rowID)
-    formData.append("tagID", metaData[0].value)
-    formData.append("nfcTag", metaData[1].value)
-    formData.append("mediaType", metaData[2].value)
-    formData.append("energyMediaType", metaData[3].value)
-    formData.append("meterPointDescription", metaData[4].value)
-    formData.append("energyUnit", metaData[5].value)
-    formData.append("group", metaData[6].value)
-    formData.append("columnLine", metaData[7].value)
-    formData.append("meterLocation", metaData[8].value)
-    formData.append("energyArt", metaData[9].value)
-    formData.append("supplyAreaChild", metaData[10].value)
-    formData.append("meterLevelStructure", metaData[11].value)
-    formData.append("supplyAreaParent", metaData[12].value)
-    formData.append("longtitude", currentLogitude)
-    formData.append("latitude", currentLatitude)
-    formData.append("serialNumber", metaData[15].value)
-    formData.append("fabricate", metaData[16].value)
-    formData.append("model", metaData[17].value)
-    formData.append("impUnit", metaData[18].value)
-    formData.append("screenCharacters", metaData[19].value)
-    formData.append("fabricationDate", metaData[20].value)
-
-
-    fetch('http://249fc3ad6c59.ngrok.io/updateMetaDataMobile/', {
+    formData.append("id", nfc_id);
+    formData.append("longitude", currentLogitude);
+    formData.append("latitude", currentLatitude);
+    fetch('http://249fc3ad6c59.ngrok.io/updateMetaMainDataLocation/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
       },
       body: formData
+    })                    
+    .then((response) => response.json())
+    .then(response => {
+      if (response.success == "true") {
+        getMetaData(nfc_id)
+      } else {
+        alert("save error")
+      }
+    }).catch(err => {
+      console.log(err)
     })
-      .then((response) => response.json())
-      .then(response => {
-        if (response.success == "true") {
-          metaData[12].value = currentLatitude
-          metaData[13].value = currentLongitude
-        } else {
-          alert("update error")
-        }
-      }).catch(err => {
-        console.log(err)
-      })
+  }
+
+  _goMap = () => {
+    navigation.navigate('Location', {equipment_name: equipmentName, longitude: selectedLongitude, latitude: selectedLatitude})
   }
 
   renderItem = ({ item }) => (
@@ -465,7 +436,7 @@ export default function Metadata({ route, navigation }) {
         </View>
         <View style={styles.buttonGroupContainer}>
           <View>
-            <TouchableOpacity onPress={() => _handleMapType()}>
+            <TouchableOpacity onPress={() => _goMap()}>
               <Text style={styles.textStyle}>Equipment Map</Text>
             </TouchableOpacity>
           </View>

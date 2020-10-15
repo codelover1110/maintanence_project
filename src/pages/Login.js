@@ -48,9 +48,9 @@ function Login(props) {
         .then((responseJson) => {
           if (responseJson.user_name != "") {
             if (responseJson.password != "") {
-              console.log(responseJson.Authority)
               if (responseJson.Authority != "false") {
                 AsyncStorage.setItem('customerID', userName);
+                AsyncStorage.setItem('userAutherity', responseJson["autherity"]);
                 if (isSelected) {
                   AsyncStorage.setItem('check_status', 'true')
                 }

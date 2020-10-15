@@ -20,7 +20,13 @@ const App = ({ navigation, route }) => {
   const [nfcTAG, setNfcTAG] = useState('')
   const [energyArt, setEnergyArt] = useState('')
   const [flag, setFlag] = useState(true)
+  const [userAutherity, setUserAutherity] = useState()
+  const [currentLatitude, setCurrentLatitude] = useState(37.33233141)
+  const [currentLogitude, setCurrentLongitude] = useState(-122.0312186)
 
+  const { height, width } = Dimensions.get('window');
+  const LATITUDE_DELTA = 0.009
+  const LONGITUDE_DELTA = LATITUDE_DELTA * (width / height)
   const colorButton = {
     Water: require('../assets/images/metaIcon/blue.png'),
     Electricity: require('../assets/images/metaIcon/green.png'),
@@ -33,17 +39,63 @@ const App = ({ navigation, route }) => {
     pH: require('../assets/images/metaIcon/purple.png'),
     Acid: require('../assets/images/metaIcon/yellow.png'),
   };
+  var latitude = 55.586940;
+  var longitude = 9.726038;
+  if (route.params) {
+      latitude = route.params.latitude;
+      longitude = route.params.longitude;
+      console.log(latitude, longitude)
+      console.log(route.params.equipment_name)
+  } 
 
- 
+  const initialRegion = {
+    // latitude: 55.586940,
+    // longitude: 9.726038,
+    // // latitude: currentLatitude,
+    // // longitude: currentLogitude, 
+    latitude: latitude,
+    longitude: longitude,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  }
+
+  console.log(initialRegion)
 
   useFocusEffect(() => {
+    if (route.params) {
+      const { equipment_name } = route.params;
+      setSearchContent(equipment_name);
+    } 
+
     if(flag) {
-     getMetaDatas()
-     setFlag(false)
+      getMetaDatas()
+      setFlag(false)
+      AsyncStorage.getItem('userAutherity').then(value => {
+        setUserAutherity(value)
+      });
     }
-     setTagType('')
+    getCurrentLocation()
+    setTagType('')
   });
 
+  getCurrentLocation = () => {
+    Geolocation.getCurrentPosition(
+      //Will give you the current location
+      (position) => {
+        let longitude = JSON.stringify(position.coords.longitude);
+        let latitude = JSON.stringify(position.coords.latitude);
+        setCurrentLatitude(latitude)
+        setCurrentLongitude(longitude)
+        AsyncStorage.setItem('currentLongitude', longitude);
+        AsyncStorage.setItem('currentLatitude', latitude);
+
+      },
+      (error) => alert(error.message),
+      {
+        enableHighAccuracy: true, timeout: 15000, maximumAge: 10000
+      }
+    )
+  }
 
   getMetaDatas = () => {
     let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaMainDatas/';
@@ -54,8 +106,6 @@ const App = ({ navigation, route }) => {
         setTempMetaData(responseJson)
       })
   }
-
-
 
   _handleSearch = () => {
     if (searchContent == '') {
@@ -78,16 +128,7 @@ const App = ({ navigation, route }) => {
     }
   }
 
-  const { height, width } = Dimensions.get('window');
-  const LATITUDE_DELTA = 0.009
-  const LONGITUDE_DELTA = LATITUDE_DELTA * (width / height)
-
-  const [region, setRegion] = useState({
-    latitude: 55.586940,
-    longitude: 9.726038,
-    latitudeDelta: LATITUDE_DELTA,
-    longitudeDelta: LONGITUDE_DELTA,
-  });
+  const [region, setRegion] = useState(initialRegion);
 
   _handleMarker = (metaData) => {
     setTagID(metaData["equipment_name"])
@@ -140,30 +181,74 @@ const App = ({ navigation, route }) => {
     navigation.navigate('Metadata', { nfc_id: nfcTAG })
   }
   _getLocation = () => {
+    if (nfcTAG == '') {
+      alert("Select Tag!")
+      return
+    }
+    if (userAutherity == 'Admin') {
     let alertData = "Get Current Location"
-    Alert.alert(
-      'Are you sure?',
-      alertData,
-      [
-        {
-          text: 'Cancel',
-          onPress: () => console.log('OK Pressed'),
-          style: 'cancel',
-        },
-        { text: 'OK', onPress: () => _upDateLocation() },
-      ],
-      { cancelable: false },
-    );
+      Alert.alert(
+        'Are you sure?',
+        alertData,
+        [
+          {
+            text: 'Cancel',
+            onPress: () => console.log('OK Pressed'),
+            style: 'cancel',
+          },
+          { text: 'OK', onPress: () => _upDateLocation() },
+        ],
+        { cancelable: false },
+      );
+    } else {
+      alert("Only Available if user had User Authority  'Admin'")
+    }
+   
   }
+  _upDateLocation = () => {
+    let formData = new FormData();
+    formData.append("id", nfcTAG);
+    formData.append("longitude", currentLogitude);
+    formData.append("latitude", currentLatitude);
+    console.log(nfcTAG, currentLatitude, currentLogitude)
+
+    fetch('http://249fc3ad6c59.ngrok.io/updateMetaMainDataLocation/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+      body: formData
+    })                    
+    .then((response) => response.json())
+    .then(response => {
+      if (response.success == "true") {
+        getMetaDatas()
+      } else {
+        alert("save error")
+      }
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+
   _goTags = () => {
     navigation.navigate('Tags')
   }
+
   _handleMapType = () => {
     if (mapTypes == 'standard') {
       setMapTypes('satellite')
     } else {
       setMapTypes('standard')
     }
+  }
+
+  _goActivityLog = () => {
+    if (nfcTAG == '') {
+      alert("Select Tag!")
+      return
+    }
+    navigation.navigate('ActivityLog', { nfc_id: nfcTAG, equipment_name: tagID })
   }
 
   mapStyle = [{ "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] }, { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] }, { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] }, { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] }, { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] }, { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }, { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] }, { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }];
@@ -192,9 +277,9 @@ const App = ({ navigation, route }) => {
       </View>
       <MapView
         style={styles.map}
-        initialRegion={region}
+        initialRegion={initialRegion}
         customMapStyle={mapStyle}
-        mapType={'satellite'}
+        mapType='satellite'
         showsUserLocation={true}
         onRegionChange={region => setRegion({ region })}
         onRegionChangeComplete={region => setRegion({ region })}
@@ -275,14 +360,14 @@ const App = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={styles.buttonGroupContainer}>
           <View style={styles.itemTitle}>
-            <TouchableOpacity onPress={() => _goConsumption()}>
+            <TouchableOpacity onPress={() => _goActivityLog()}>
               <Text style={styles.textStyle}>Activity Log</Text>
             </TouchableOpacity>
           </View>
         </View>
         <View style={styles.buttonGroupContainer}>
           <View style={styles.itemTitle}>
-            <TouchableOpacity onPress={() => _handleMapType()}>
+            <TouchableOpacity onPress={() => navigation.navigate('EquipmentList')}>
               <Text style={styles.textStyle}>Equipment List</Text>
             </TouchableOpacity>
           </View>

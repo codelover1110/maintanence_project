@@ -41,19 +41,6 @@ export default function ActivityLog({ route, navigation }) {
     getMetaDataLog(equipment_name)
   }, [nfc_id, equipment_name]);
 
-  const options = [
-    { value: "Electricity", label: "Electricity" },
-    { value: "Water", label: "Water" },
-    { value: "CO2", label: "CO2" },
-    { value: "NH3", label: "NH3" },
-    { value: "Compressed Air", label: "Compressed Air" },
-    { value: "Heat", label: "Heat" },
-    { value: "Glycol", label: "Glycol" },
-    { value: "Waste Water", label: "Waste Water" },
-    { value: "pH", label: "pH" },
-    { value: "Acid", label: "Acid" }
-  ]
-
   getMetaData = (tag_id) => {
     let api_url = 'http://249fc3ad6c59.ngrok.io/editMetaMainData/' + tag_id;
     return fetch(api_url)

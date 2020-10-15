@@ -7,8 +7,6 @@ import Login from '../pages/Login';
 import PasswordReset from '../pages/PasswordReset';
 import ActivityLog from '../pages/ActivityLog';
 
-
-
 import Nfctag from '../pages/Nfctag';
 import Home from '../pages/Home';
 import Metadata from '../pages/Metadata';
@@ -16,15 +14,9 @@ import Consumption from '../pages/Consumption';
 import SuccessPage from '../pages/SuccessPage';
 import Location from '../pages/Location';
 import Consumptionlocation from '../pages/Consumptionlocation';
-import Tags from '../pages/Tags';
-
-
-
+import EquipmentList from '../pages/EquipmentList';
 
 const Stack = createStackNavigator();
-
-
-
 
 function App() {
   const handleLogout = (navigation) => {
@@ -33,7 +25,7 @@ function App() {
   }
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="LogOut">
+      <Stack.Navigator initialRouteName="Login">
         <Stack.Screen
           name="Login"
           component={Login}
@@ -132,8 +124,8 @@ function App() {
           }}
         />
         <Stack.Screen
-          name="Tags"
-          component={Tags}
+          name="EquipmentList"
+          component={EquipmentList}
           options={{
             headerTitle: '',
             headerStyle: {

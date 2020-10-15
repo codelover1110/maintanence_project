@@ -36,7 +36,7 @@ export default function ShopScreen({ navigation }) {
     return function cleanup() {
       this._cleanUp();
     }
-    // this._cleanSuccess(55);
+    // this._cleanSuccess(11);
 
   });
 
@@ -70,11 +70,11 @@ export default function ShopScreen({ navigation }) {
   }
 
   _cleanSuccess = (nfc_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/editNfctag/' + nfc_id;
+    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaMainDataTag/' + nfc_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
-        let tag_id = responseJson["tag_id"]
+        let tag_id = responseJson["id"]
         navigation.navigate('Metadata', {
           nfc_id: tag_id
         });
