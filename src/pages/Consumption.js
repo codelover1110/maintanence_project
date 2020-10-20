@@ -50,7 +50,7 @@ export default function Consumption({ route, navigation }) {
   });
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/editConsumptionmobile/' + tag_id;
+    let api_url = 'http://0224f17dee4f.ngrok.io/editConsumptionmobile/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -66,7 +66,7 @@ export default function Consumption({ route, navigation }) {
   }
 
   getRemarks = () => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/getRemarks/';
+    let api_url = 'http://0224f17dee4f.ngrok.io/getRemarks/';
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -136,7 +136,7 @@ export default function Consumption({ route, navigation }) {
     formData.append("remark", selectOption)
     formData.append("read_by", currentID)
 
-    fetch('http://249fc3ad6c59.ngrok.io/manageConsumptionData/', {
+    fetch('http://0224f17dee4f.ngrok.io/manageConsumptionData/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',

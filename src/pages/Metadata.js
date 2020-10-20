@@ -62,7 +62,7 @@ export default function Metadata({ route, navigation }) {
   }, [nfc_id]);
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/editMetaMainData/' + tag_id;
+    let api_url = 'http://0224f17dee4f.ngrok.io/editMetaMainData/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -158,7 +158,7 @@ export default function Metadata({ route, navigation }) {
   }
 
   getLatestService = (equipmentName) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaActivityService/' + equipmentName;
+    let api_url = 'http://0224f17dee4f.ngrok.io/getMetaActivityService/' + equipmentName;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -203,7 +203,7 @@ export default function Metadata({ route, navigation }) {
     formData.append("serviced_by", userName)
 
 
-    fetch('http://249fc3ad6c59.ngrok.io/addMataArchive/', {
+    fetch('http://0224f17dee4f.ngrok.io/addMataArchive/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -271,7 +271,7 @@ export default function Metadata({ route, navigation }) {
     formData.append("id", nfc_id);
     formData.append("longitude", currentLogitude);
     formData.append("latitude", currentLatitude);
-    fetch('http://249fc3ad6c59.ngrok.io/updateMetaMainDataLocation/', {
+    fetch('http://0224f17dee4f.ngrok.io/updateMetaMainDataLocation/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -295,8 +295,8 @@ export default function Metadata({ route, navigation }) {
   }
 
   renderItem = ({ item }) => (
-    <TouchableHighlight onPress={() => { if(item.item == "equipment_name") navigation.navigate('ActivityLog', { nfc_id: rowID, equipment_name: item.value })}}
-      underlayColor={'#f1f1f1'}>
+    // <TouchableHighlight onPress={() => { if(item.item == "equipment_name") navigation.navigate('ActivityLog', { nfc_id: rowID, equipment_name: item.value })}}
+    //   underlayColor={'#f1f1f1'}>
       <View style={styles.item} >
         <View style={styles.marginLeft}>
           <View style={styles.itemTitle}>
@@ -316,17 +316,43 @@ export default function Metadata({ route, navigation }) {
           }
         </View>
       </View>
-    </TouchableHighlight>
+    // </TouchableHighlight>
   )
 
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
-        <FlatList
+        {/* <FlatList
           data={metaData}
           keyExtractor={(item) => item.item}
           renderItem={renderItem}
-        />
+          maintainVisibleContentPosition={{
+            minIndexForVisible: 0
+          }}
+        /> */}
+        {metaData && metaData.map((item, key) => {
+          return (
+            <View style={styles.item} key={key}>
+              <View style={styles.marginLeft}>
+                <View style={styles.itemTitle}>
+                  <Text style={styles.itemTitleText}>{item.text}</Text>
+                </View>
+              </View>
+              <View style={styles.itemContent}>
+                { item.item != 'contacts' ?  
+                  <Text style={styles.text}>{item.value} </Text> :
+                  <View style={styles.scrollText}>
+                    <ScrollView>
+                      {JSON.parse(item.value).map((contact) => 
+                        <Text style={styles.text} key={contact["label"]} >{contact["label"]} </Text>
+                      )}
+                    </ScrollView>
+                  </View>
+                }
+              </View>
+            </View>
+          )
+        })}
       </View>
       <Modal animationType="fade" visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>

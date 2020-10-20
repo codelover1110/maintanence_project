@@ -38,13 +38,29 @@ export default function EquipmentList({ route, navigation }) {
     }
   });
 
-  getMetaData = (tag_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaMainDatas/';
-    return fetch(api_url)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        setMetaDatas(responseJson);     
-      })
+  getMetaData = () => {
+    AsyncStorage.getItem('customerID').then(value => {
+      let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + value;
+      return fetch(api_url)
+        .then((response) => response.json())
+        .then((responseJson) => {
+          let convertJson = JSON.parse(responseJson.technical_authority);
+          api_url = 'http://0224f17dee4f.ngrok.io/getMetaMainDatas/';
+          return fetch(api_url)
+            .then((response) => response.json())
+            .then((responseJson) => {
+              console.log(convertJson)
+              var filterdData = []
+              convertJson.map((item) => {
+                filterdData = filterdData.concat(responseJson.filter(x => x.technical_category == item.label))
+              })
+              setMetaDatas(filterdData)
+          })
+        })
+        .catch((error) => {
+          console.error(error);
+        })    
+    });
   }
 
   useLayoutEffect(() => {

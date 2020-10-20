@@ -22,7 +22,6 @@ function Login(props) {
   const [userName, setUserName] = useState('');
   const [userPassword, setUserPassword] = useState('');
   const [showLoading, setShowLoading] = useState(false);
-
   const [isSelected, setSelection] = useState(true);
   const [isLogined, setLogined] = useState(false);
 
@@ -42,7 +41,7 @@ function Login(props) {
     if (userName && userPassword) {
       setShowLoading(true);
 
-      let api_url = 'http://249fc3ad6c59.ngrok.io/getUserMobile/' + userName + '/' + userPassword;
+      let api_url = 'http://0224f17dee4f.ngrok.io/getUserMobile/' + userName + '/' + userPassword;
       return fetch(api_url)
         .then((response) => response.json())
         .then((responseJson) => {

@@ -57,7 +57,7 @@ function Register(props) {
       alert("You have to input your information correctly!")
     } else {
       setSignLoading(true)
-      fetch('http://249fc3ad6c59.ngrok.io/adduser/', {
+      fetch('http://0224f17dee4f.ngrok.io/adduser/', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

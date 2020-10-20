@@ -42,7 +42,7 @@ export default function ActivityLog({ route, navigation }) {
   }, [nfc_id, equipment_name]);
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/editMetaMainData/' + tag_id;
+    let api_url = 'http://0224f17dee4f.ngrok.io/editMetaMainData/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -57,7 +57,7 @@ export default function ActivityLog({ route, navigation }) {
   }
 
   getMetaDataLog = (equipment_name) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaActivity/' + equipment_name;
+    let api_url = 'http://0224f17dee4f.ngrok.io/getMetaActivity/' + equipment_name;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -65,8 +65,8 @@ export default function ActivityLog({ route, navigation }) {
         let metaDataLogs = []
         convertJson.map((metaDataLog) => (
           metaDataLogs.push({
-            item: 'serviced:', 
-            text: 'Serviced:', 
+            item: metaDataLog["fields"]["service_repair"], 
+            text: metaDataLog["fields"]["service_repair"], 
             value: ((metaDataLog["fields"]["date"]).replace('T', ' ')).replace('Z', '') ,
             serviced_by: metaDataLog["fields"]["serviced_by"],
             service_repair: metaDataLog["fields"]["service_repair"],

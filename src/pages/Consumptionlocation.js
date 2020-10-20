@@ -32,7 +32,7 @@ export default function Consumptionlocation({ route, navigation }) {
   }, []);
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/editConsumptionlocation/' + tag_id;
+    let api_url = 'http://0224f17dee4f.ngrok.io/editConsumptionlocation/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {

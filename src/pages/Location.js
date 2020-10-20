@@ -23,6 +23,7 @@ const App = ({ navigation, route }) => {
   const [userAutherity, setUserAutherity] = useState()
   const [currentLatitude, setCurrentLatitude] = useState(37.33233141)
   const [currentLogitude, setCurrentLongitude] = useState(-122.0312186)
+  const [userTechnicalCatetory, setUserTechnicalCategory] = useState([])
 
   const { height, width } = Dimensions.get('window');
   const LATITUDE_DELTA = 0.009
@@ -39,44 +40,29 @@ const App = ({ navigation, route }) => {
     pH: require('../assets/images/metaIcon/purple.png'),
     Acid: require('../assets/images/metaIcon/yellow.png'),
   };
-  var latitude = 55.586940;
-  var longitude = 9.726038;
-  if (route.params) {
-      latitude = route.params.latitude;
-      longitude = route.params.longitude;
-      console.log(latitude, longitude)
-      console.log(route.params.equipment_name)
-  } 
-
-  const initialRegion = {
-    // latitude: 55.586940,
-    // longitude: 9.726038,
-    // // latitude: currentLatitude,
-    // // longitude: currentLogitude, 
-    latitude: latitude,
-    longitude: longitude,
-    latitudeDelta: LATITUDE_DELTA,
-    longitudeDelta: LONGITUDE_DELTA,
-  }
-
-  console.log(initialRegion)
+  const [initialRegion, setInitialRegion] = useState({latitude: 37.33233141, longitude: -122.0312186, latitudeDelta: LATITUDE_DELTA, longitudeDelta: LONGITUDE_DELTA, })
 
   useFocusEffect(() => {
-    if (route.params) {
-      const { equipment_name } = route.params;
-      setSearchContent(equipment_name);
-    } 
-
     if(flag) {
       getMetaDatas()
       setFlag(false)
-      AsyncStorage.getItem('userAutherity').then(value => {
+      AsyncStorage.getItem('customerID').then(value => {
         setUserAutherity(value)
       });
     }
     getCurrentLocation()
     setTagType('')
   });
+
+  useEffect(() => {
+    if (route.params) {
+        const { equipment_name } = route.params;
+        console.log(initialRegion)
+        setSearchContent(equipment_name);
+        _handleSearchContent(equipment_name);
+
+    } 
+  }, [route.params])
 
   getCurrentLocation = () => {
     Geolocation.getCurrentPosition(
@@ -98,13 +84,30 @@ const App = ({ navigation, route }) => {
   }
 
   getMetaDatas = () => {
-    let api_url = 'http://249fc3ad6c59.ngrok.io/getMetaMainDatas/';
-    return fetch(api_url)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        setMetaDatas(responseJson)
-        setTempMetaData(responseJson)
-      })
+    AsyncStorage.getItem('customerID').then(value => {
+      let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + value;
+      return fetch(api_url)
+        .then((response) => response.json())
+        .then((responseJson) => {
+          let convertJson = JSON.parse(responseJson.technical_authority);
+          setUserTechnicalCategory(convertJson)
+          api_url = 'http://0224f17dee4f.ngrok.io/getMetaMainDatas/';
+          return fetch(api_url)
+            .then((response) => response.json())
+            .then((responseJson) => {
+              console.log(convertJson)
+              var filterdData = []
+              convertJson.map((item) => {
+                filterdData = filterdData.concat(responseJson.filter(x => x.technical_category == item.label))
+              })
+              setMetaDatas(filterdData)
+              setTempMetaData(filterdData)
+          })
+        })
+        .catch((error) => {
+          console.error(error);
+        })    
+    });
   }
 
   _handleSearch = () => {
@@ -185,26 +188,34 @@ const App = ({ navigation, route }) => {
       alert("Select Tag!")
       return
     }
-    if (userAutherity == 'Admin') {
-    let alertData = "Get Current Location"
-      Alert.alert(
-        'Are you sure?',
-        alertData,
-        [
-          {
-            text: 'Cancel',
-            onPress: () => console.log('OK Pressed'),
-            style: 'cancel',
-          },
-          { text: 'OK', onPress: () => _upDateLocation() },
-        ],
-        { cancelable: false },
-      );
-    } else {
-      alert("Only Available if user had User Authority  'Admin'")
-    }
-   
+    let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + userAutherity;
+    return fetch(api_url)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if (responseJson.user_authority == 'Admin') {
+          let alertData = "Get Current Location"
+            Alert.alert(
+              'Are you sure?',
+              alertData,
+              [
+                {
+                  text: 'Cancel',
+                  onPress: () => console.log('OK Pressed'),
+                  style: 'cancel',
+                },
+                { text: 'OK', onPress: () => _upDateLocation() },
+              ],
+              { cancelable: false },
+            );
+          } else {
+            alert("Only Available if user had User Authority  'Admin'")
+          }
+      })
+      .catch((error) => {
+        console.error(error);
+      })          
   }
+
   _upDateLocation = () => {
     let formData = new FormData();
     formData.append("id", nfcTAG);
@@ -212,7 +223,7 @@ const App = ({ navigation, route }) => {
     formData.append("latitude", currentLatitude);
     console.log(nfcTAG, currentLatitude, currentLogitude)
 
-    fetch('http://249fc3ad6c59.ngrok.io/updateMetaMainDataLocation/', {
+    fetch('http://0224f17dee4f.ngrok.io/updateMetaMainDataLocation/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -251,6 +262,15 @@ const App = ({ navigation, route }) => {
     navigation.navigate('ActivityLog', { nfc_id: nfcTAG, equipment_name: tagID })
   }
 
+  onRegionChange = () => {
+    setInitialRegion({
+      latitude: 58.586940,
+      longitude: 9.726038,
+      latitudeDelta: LATITUDE_DELTA,
+      longitudeDelta: LONGITUDE_DELTA,
+    })
+  }
+
   mapStyle = [{ "elementType": "geometry", "stylers": [{ "color": "#242f3e" }] }, { "elementType": "labels.text.fill", "stylers": [{ "color": "#746855" }] }, { "elementType": "labels.text.stroke", "stylers": [{ "color": "#242f3e" }] }, { "featureType": "administrative.locality", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#263c3f" }] }, { "featureType": "poi.park", "elementType": "labels.text.fill", "stylers": [{ "color": "#6b9a76" }] }, { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#38414e" }] }, { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212a37" }] }, { "featureType": "road", "elementType": "labels.text.fill", "stylers": [{ "color": "#9ca5b3" }] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#746855" }] }, { "featureType": "road.highway", "elementType": "geometry.stroke", "stylers": [{ "color": "#1f2835" }] }, { "featureType": "road.highway", "elementType": "labels.text.fill", "stylers": [{ "color": "#f3d19c" }] }, { "featureType": "transit", "elementType": "geometry", "stylers": [{ "color": "#2f3948" }] }, { "featureType": "transit.station", "elementType": "labels.text.fill", "stylers": [{ "color": "#d59563" }] }, { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#17263c" }] }, { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#515c6d" }] }, { "featureType": "water", "elementType": "labels.text.stroke", "stylers": [{ "color": "#17263c" }] }];
 
   return (
@@ -264,6 +284,7 @@ const App = ({ navigation, route }) => {
             maxLength={200}
             placeholder="search..."
             autoCapitalize="none"
+            value={searchContent}
           />
         </View>
         <View>
@@ -281,9 +302,12 @@ const App = ({ navigation, route }) => {
         customMapStyle={mapStyle}
         mapType='satellite'
         showsUserLocation={true}
-        onRegionChange={region => setRegion({ region })}
-        onRegionChangeComplete={region => setRegion({ region })}
+        onRegionChange={onRegionChange}
+        onRegionChangeComplete={onRegionChange}
+        // onRegionChange={region => setRegion({ region })}
+        // onRegionChangeComplete={region => setRegion({ region })}
         zoomEnabled={true}
+        showsMyLocationButton={false}
       >
         {metaDatas.length > 0 && metaDatas.map((metaData) => {
           if (metaData["latitude"] && metaData["longitude"]) {

@@ -18,7 +18,7 @@ import {
 
 export default function Home({ navigation }) {
 
-  _handleLogout = () => {
+  const _handleLogout = () => {
     AsyncStorage.removeItem('check_status')
     navigation.navigate('Login')
 
@@ -30,7 +30,7 @@ export default function Home({ navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.logoContainerLogoutButton}>
-        <TouchableOpacity onPress={() => { AsyncStorage.removeItem('check_status'); _handleLogout() }} style={styles.backButtonContainer} >
+        <TouchableOpacity onPress={_handleLogout} style={styles.backButtonContainer} >
           <Text style={styles.backButton} >Log Out</Text>
         </TouchableOpacity>
       </View>
