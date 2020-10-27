@@ -14,7 +14,8 @@ import {
   TouchableHighlight,
   KeyboardAvoidingView,
   Keyboard,
-  ScrollView
+  ScrollView,
+  Linking
 } from 'react-native';
 import NfcManager, { NfcTech, Ndef } from 'react-native-nfc-manager';
 import AsyncStorage from "@react-native-community/async-storage";
@@ -48,6 +49,9 @@ export default function Metadata({ route, navigation }) {
   const [selectedLatitude, setSelectedLatitude] = useState();
   const [selectedLongitude, setSelectedLongitude] = useState();
 
+  const [contactsModalVisible, setContactsModalVisible] = useState(false);
+  const [contactsData, setContactsData] = useState();
+
   useEffect(() => {
     setNfcTagID(nfc_id)
     getMetaData(nfc_id)
@@ -62,7 +66,7 @@ export default function Metadata({ route, navigation }) {
   }, [nfc_id]);
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://0224f17dee4f.ngrok.io/editMetaMainData/' + tag_id;
+    let api_url = 'http://62e3972fd691.ngrok.io/editMetaMainData/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -84,6 +88,11 @@ export default function Metadata({ route, navigation }) {
         ]
         setMetaData(metaData)
         setNfcTAG(responseJson.nfc_tag)
+        let contacts = []
+        JSON.parse(responseJson.contacts).map((contact) => 
+          contacts.push({item: contact["label"], text: contact["label"], value: contact["label"]})
+        )
+        setContactsData(contacts)
       })
   }
 
@@ -158,7 +167,7 @@ export default function Metadata({ route, navigation }) {
   }
 
   getLatestService = (equipmentName) => {
-    let api_url = 'http://0224f17dee4f.ngrok.io/getMetaActivityService/' + equipmentName;
+    let api_url = 'http://62e3972fd691.ngrok.io/getMetaActivityService/' + equipmentName;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -181,8 +190,17 @@ export default function Metadata({ route, navigation }) {
     let month = new Date().getMonth() + 1; //Current Month
     let year = new Date().getFullYear(); //Current Year
     let hours = new Date().getHours(); //Current Hours
+    if (hours < 10) {
+      hours = "0" + hours;
+    }
     let min = new Date().getMinutes(); //Current Minutes
+    if (min < 10) {
+      min = "0" + min;
+    }
     let sec = new Date().getSeconds();
+    if (sec < 10) {
+      sec = "0" + sec;
+    }
     let currentDate = year + '-' + month + '-' + date + ' ' + hours + ':' + min + ':' + sec
     return currentDate;
   }
@@ -195,6 +213,7 @@ export default function Metadata({ route, navigation }) {
     formData.append("service_repair", serviceRepair)
     formData.append("due_time", dueTime)
     formData.append("comment", comment)
+    formData.append("nfc_id", nfc_id)
     if (serviceRepair == "Service") {
       formData.append("date", newService)
     } else {
@@ -203,7 +222,7 @@ export default function Metadata({ route, navigation }) {
     formData.append("serviced_by", userName)
 
 
-    fetch('http://0224f17dee4f.ngrok.io/addMataArchive/', {
+    fetch('http://62e3972fd691.ngrok.io/addMataArchive/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -271,7 +290,7 @@ export default function Metadata({ route, navigation }) {
     formData.append("id", nfc_id);
     formData.append("longitude", currentLogitude);
     formData.append("latitude", currentLatitude);
-    fetch('http://0224f17dee4f.ngrok.io/updateMetaMainDataLocation/', {
+    fetch('http://62e3972fd691.ngrok.io/updateMetaMainDataLocation/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -294,42 +313,30 @@ export default function Metadata({ route, navigation }) {
     navigation.navigate('Location', {equipment_name: equipmentName, longitude: selectedLongitude, latitude: selectedLatitude})
   }
 
+  _handleEmail = (email) => {
+    let link = "mailto:" + email
+    Linking.openURL(link)
+  }
+
   renderItem = ({ item }) => (
-    // <TouchableHighlight onPress={() => { if(item.item == "equipment_name") navigation.navigate('ActivityLog', { nfc_id: rowID, equipment_name: item.value })}}
-    //   underlayColor={'#f1f1f1'}>
+    <TouchableHighlight onPress={() => { _handleEmail(item.value) }}
+      underlayColor={'#f1f1f1'}>
       <View style={styles.item} >
         <View style={styles.marginLeft}>
           <View style={styles.itemTitle}>
-            <Text style={styles.itemTitleText}>{item.text}</Text>
+            <Text style={styles.itemTitleText}>Contact:</Text>
           </View>
         </View>
         <View style={styles.itemContent}>
-          { item.item != 'contacts' ?  
-            <Text style={styles.text}>{item.value} </Text> :
-            <View style={styles.scrollText}>
-              <ScrollView>
-                 {JSON.parse(item.value).map((contact) => 
-                  <Text style={styles.text} key={contact["label"]} >{contact["label"]} </Text>
-                )}
-              </ScrollView>
-            </View>
-          }
+            <Text style={styles.text}>{item.value}</Text>
         </View>
       </View>
-    // </TouchableHighlight>
+    </TouchableHighlight>
   )
 
   return (
     <View style={styles.container}>
       <View style={styles.contentContainer}>
-        {/* <FlatList
-          data={metaData}
-          keyExtractor={(item) => item.item}
-          renderItem={renderItem}
-          maintainVisibleContentPosition={{
-            minIndexForVisible: 0
-          }}
-        /> */}
         {metaData && metaData.map((item, key) => {
           return (
             <View style={styles.item} key={key}>
@@ -342,11 +349,11 @@ export default function Metadata({ route, navigation }) {
                 { item.item != 'contacts' ?  
                   <Text style={styles.text}>{item.value} </Text> :
                   <View style={styles.scrollText}>
-                    <ScrollView>
+                    <TouchableOpacity onPress={() => setContactsModalVisible(true)}>
                       {JSON.parse(item.value).map((contact) => 
                         <Text style={styles.text} key={contact["label"]} >{contact["label"]} </Text>
                       )}
-                    </ScrollView>
+                    </TouchableOpacity>
                   </View>
                 }
               </View>
@@ -354,6 +361,25 @@ export default function Metadata({ route, navigation }) {
           )
         })}
       </View>
+      <Modal animationType="fade" visible={contactsModalVisible}
+        onRequestClose={() => setContactsModalVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : height} style={styles.container}>
+          <View style={styles.modalView}>
+            <View style={styles.logoContainerLogoutButton}>
+                <TouchableOpacity onPress={() => { setContactsModalVisible(false) }} style={styles.backButtonContainer} >
+                  <Text style={styles.backButtonModal} >Back</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.contentContainer}>
+              <FlatList
+                data={contactsData}
+                keyExtractor={(item, key) => key}
+                renderItem={renderItem}
+              />
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
       <Modal animationType="fade" visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS == "ios" ? "padding" : height} style={styles.container}>

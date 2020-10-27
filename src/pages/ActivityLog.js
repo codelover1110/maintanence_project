@@ -42,7 +42,7 @@ export default function ActivityLog({ route, navigation }) {
   }, [nfc_id, equipment_name]);
 
   getMetaData = (tag_id) => {
-    let api_url = 'http://0224f17dee4f.ngrok.io/editMetaMainData/' + tag_id;
+    let api_url = 'http://62e3972fd691.ngrok.io/editMetaMainData/' + tag_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -57,7 +57,7 @@ export default function ActivityLog({ route, navigation }) {
   }
 
   getMetaDataLog = (equipment_name) => {
-    let api_url = 'http://0224f17dee4f.ngrok.io/getMetaActivity/' + equipment_name;
+    let api_url = 'http://62e3972fd691.ngrok.io/getMetaActivity/' + equipment_name;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {

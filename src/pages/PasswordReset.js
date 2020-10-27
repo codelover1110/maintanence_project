@@ -23,7 +23,7 @@ function PasswordReset(props) {
       if (email != '') {
         let formData = new FormData();
         formData.append("email", email);
-        fetch('http://0224f17dee4f.ngrok.io/resetEmailMobile/', {
+        fetch('http://62e3972fd691.ngrok.io/resetEmailMobile/', {
         method: 'POST',
         headers: {
           'Content-Type': 'multipart/form-data',

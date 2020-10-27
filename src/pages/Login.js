@@ -41,7 +41,7 @@ function Login(props) {
     if (userName && userPassword) {
       setShowLoading(true);
 
-      let api_url = 'http://0224f17dee4f.ngrok.io/getUserMobile/' + userName + '/' + userPassword;
+      let api_url = 'http://62e3972fd691.ngrok.io/getUserMobile/' + userName + '/' + userPassword;
       return fetch(api_url)
         .then((response) => response.json())
         .then((responseJson) => {

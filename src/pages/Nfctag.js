@@ -70,7 +70,7 @@ export default function ShopScreen({ navigation }) {
   }
 
   _cleanSuccess = (nfc_id) => {
-    let api_url = 'http://0224f17dee4f.ngrok.io/getMetaMainDataTag/' + nfc_id;
+    let api_url = 'http://62e3972fd691.ngrok.io/getMetaMainDataTag/' + nfc_id;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {

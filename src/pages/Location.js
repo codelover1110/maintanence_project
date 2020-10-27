@@ -85,13 +85,13 @@ const App = ({ navigation, route }) => {
 
   getMetaDatas = () => {
     AsyncStorage.getItem('customerID').then(value => {
-      let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + value;
+      let api_url = 'http://62e3972fd691.ngrok.io/getUserByID/' + value;
       return fetch(api_url)
         .then((response) => response.json())
         .then((responseJson) => {
           let convertJson = JSON.parse(responseJson.technical_authority);
           setUserTechnicalCategory(convertJson)
-          api_url = 'http://0224f17dee4f.ngrok.io/getMetaMainDatas/';
+          api_url = 'http://62e3972fd691.ngrok.io/getMetaMainDatas/';
           return fetch(api_url)
             .then((response) => response.json())
             .then((responseJson) => {
@@ -188,7 +188,7 @@ const App = ({ navigation, route }) => {
       alert("Select Tag!")
       return
     }
-    let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + userAutherity;
+    let api_url = 'http://62e3972fd691.ngrok.io/getUserByID/' + userAutherity;
     return fetch(api_url)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -223,7 +223,7 @@ const App = ({ navigation, route }) => {
     formData.append("latitude", currentLatitude);
     console.log(nfcTAG, currentLatitude, currentLogitude)
 
-    fetch('http://0224f17dee4f.ngrok.io/updateMetaMainDataLocation/', {
+    fetch('http://62e3972fd691.ngrok.io/updateMetaMainDataLocation/', {
       method: 'POST',
       headers: {
         'Content-Type': 'multipart/form-data',

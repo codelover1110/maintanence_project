@@ -40,12 +40,12 @@ export default function EquipmentList({ route, navigation }) {
 
   getMetaData = () => {
     AsyncStorage.getItem('customerID').then(value => {
-      let api_url = 'http://0224f17dee4f.ngrok.io/getUserByID/' + value;
+      let api_url = 'http://62e3972fd691.ngrok.io/getUserByID/' + value;
       return fetch(api_url)
         .then((response) => response.json())
         .then((responseJson) => {
           let convertJson = JSON.parse(responseJson.technical_authority);
-          api_url = 'http://0224f17dee4f.ngrok.io/getMetaMainDatas/';
+          api_url = 'http://62e3972fd691.ngrok.io/getMetaMainDatas/';
           return fetch(api_url)
             .then((response) => response.json())
             .then((responseJson) => {
